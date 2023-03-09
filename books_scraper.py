@@ -38,6 +38,34 @@ def extract_with_css(query, soup, multi_values=False):
     )
 
 
+def get_book_urls(url, soup):
+    """Get urls of each book in a category"""
+    # get href for each <a> in <h3> for each <article> that has product_pod class
+    book_relative_urls = [
+        a['href'] for a in soup.select('.product_pod > h3 > a')
+    ]
+    # get url to next page
+    # get <a> in <li> that has next class in <ul> thas has pager class
+    # if not pager return None
+    pager_relative_url = soup.select_one('.pager > .next > a')
+    # loop on each page
+    while pager_relative_url:
+        pager_url = urljoin(url, pager_relative_url['href'])
+        # get soup for the new page
+        soup = get_soup(pager_url)
+        # update pager url
+        pager_relative_url = soup.select_one('.pager > .next > a')
+        book_relative_urls.extend(
+            [a['href'] for a in soup.select('.product_pod > h3 > a')]
+        )
+    # transform relative url to absolute url
+    book_urls = [
+        urljoin(url, relative_url) for relative_url in book_relative_urls
+    ]
+
+    return book_urls
+
+
 def parse_rating(query, soup):
     """Change the rating number in word form to it's integer form"""
     text_to_int = {
