@@ -8,10 +8,10 @@ from bs4 import BeautifulSoup
 from tqdm import tqdm
 
 
-def get_soup(url):
+def get_soup(session, url):
     """Get BeautifulSoup object"""
     try:
-        response = requests.get(url)
+        response = session.get(url)
     except requests.ConnectionError as err:
         # raise ConnectionError if wrong url
         message = f'\nPlease check the url :\n - {url}'
@@ -54,7 +54,7 @@ def get_category_urls(url, soup):
     return category_urls
 
 
-def get_book_urls(url, soup):
+def get_book_urls(session, url, soup):
     """Get urls of each book in a category"""
     # get href for each <a> in <h3> for each <article> that has product_pod class
     book_relative_urls = [
@@ -68,7 +68,7 @@ def get_book_urls(url, soup):
     while pager_relative_url:
         pager_url = urljoin(url, pager_relative_url['href'])
         # get soup for the new page
-        soup = get_soup(pager_url)
+        soup = get_soup(session, pager_url)
         # update pager url
         pager_relative_url = soup.select_one('.pager > .next > a')
         book_relative_urls.extend(
@@ -217,27 +217,28 @@ def get_datetime():
 def main():
     """Main function"""
     start_url = 'http://books.toscrape.com/'
-    soup = get_soup(start_url)
-    category_urls = get_category_urls(start_url, soup)
-    # raise exception if no categories found in the page
-    if not category_urls:
-        print(
-            'No category was found on the page for '
-            'this url please select another one'
-        )
-        return None
-    nb_category = len(category_urls)
-    # use tqdm to show progess because it can be very long
-    for i, category_url in enumerate(category_urls):
-        soup = get_soup(category_url)
-        category_name = extract_with_css('.breadcrumb > .active', soup)
-        book_urls = get_book_urls(category_url, soup)
-        now = get_datetime()
-        description = f'{category_name} ({i+1}/{nb_category})'
-        for book_url in tqdm(book_urls, desc=description):
-            soup = get_soup(book_url)
-            book = get_book(book_url, soup)
-            write_csv(book, now)
+    with requests.Session() as session:
+        soup = get_soup(session, start_url)
+        category_urls = get_category_urls(start_url, soup)
+        # raise exception if no categories found in the page
+        if not category_urls:
+            print(
+                'No category was found on the page for '
+                'this url please select another one'
+            )
+            return None
+        nb_category = len(category_urls)
+        # use tqdm to show progess because it can be very long
+        for i, category_url in enumerate(category_urls):
+            soup = get_soup(session, category_url)
+            category_name = extract_with_css('.breadcrumb > .active', soup)
+            book_urls = get_book_urls(session, category_url, soup)
+            now = get_datetime()
+            description = f'{category_name} ({i+1}/{nb_category})'
+            for book_url in tqdm(book_urls, desc=description):
+                soup = get_soup(session, book_url)
+                book = get_book(book_url, soup)
+                write_csv(book, now)
 
 
 if __name__ == '__main__':
