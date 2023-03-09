@@ -39,6 +39,21 @@ def extract_with_css(query, soup, multi_values=False):
     )
 
 
+def get_category_urls(url, soup):
+    """Get urls of each cateagory"""
+    # get href for each <a> in <div> that has side_categories class
+    # dont get the books category that is the category of all books  
+    category_relative_urls = [
+        a['href'] for a in soup.select('.side_categories a')
+        if 'books' not in a.get_text(strip=True).lower()
+    ]
+    category_urls = [
+        urljoin(url, relative_url) for relative_url in category_relative_urls
+    ]
+
+    return category_urls
+
+
 def get_book_urls(url, soup):
     """Get urls of each book in a category"""
     # get href for each <a> in <h3> for each <article> that has product_pod class
@@ -201,16 +216,28 @@ def get_datetime():
 
 def main():
     """Main function"""
-    start_url = 'http://books.toscrape.com/catalogue/category/books/mystery_3/index.html'
+    start_url = 'http://books.toscrape.com/'
     soup = get_soup(start_url)
-    category_name = extract_with_css('.breadcrumb > .active', soup)
-    book_urls = get_book_urls(start_url, soup)
-    now = get_datetime()
+    category_urls = get_category_urls(start_url, soup)
+    # raise exception if no categories found in the page
+    if not category_urls:
+        print(
+            'No category was found on the page for '
+            'this url please select another one'
+        )
+        return None
+    nb_category = len(category_urls)
     # use tqdm to show progess because it can be very long
-    for book_url in tqdm(book_urls, desc=category_name):
-        soup = get_soup(book_url)
-        book = get_book(book_url, soup)
-        write_csv(book, now)
+    for i, category_url in enumerate(category_urls):
+        soup = get_soup(category_url)
+        category_name = extract_with_css('.breadcrumb > .active', soup)
+        book_urls = get_book_urls(category_url, soup)
+        now = get_datetime()
+        description = f'{category_name} ({i+1}/{nb_category})'
+        for book_url in tqdm(book_urls, desc=description):
+            soup = get_soup(book_url)
+            book = get_book(book_url, soup)
+            write_csv(book, now)
 
 
 if __name__ == '__main__':
