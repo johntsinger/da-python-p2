@@ -196,11 +196,16 @@ def get_datetime():
 
 def main():
     """Main function"""
-    start_url = 'http://books.toscrape.com/catalogue/a-light-in-the-attic_1000/index.html'
+    start_url = 'http://books.toscrape.com/catalogue/category/books/mystery_3/index.html'
     soup = get_soup(start_url)
-    book = get_book(start_url, soup)
+    category_name = extract_with_css('.breadcrumb > .active', soup)
+    book_urls = get_book_urls(start_url, soup)
     now = get_datetime()
-    write_csv(book, now)
+    # use tqdm to show progess because it can be very long
+    for book_url in book_urls:
+        soup = get_soup(book_url)
+        book = get_book(book_url, soup)
+        write_csv(book, now)
 
 
 if __name__ == '__main__':
