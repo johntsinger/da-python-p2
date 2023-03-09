@@ -5,6 +5,7 @@ from datetime import datetime
 from urllib.parse import urljoin
 import requests
 from bs4 import BeautifulSoup
+from tqdm import tqdm
 
 
 def get_soup(url):
@@ -206,7 +207,7 @@ def main():
     book_urls = get_book_urls(start_url, soup)
     now = get_datetime()
     # use tqdm to show progess because it can be very long
-    for book_url in book_urls:
+    for book_url in tqdm(book_urls, desc=category_name):
         soup = get_soup(book_url)
         book = get_book(book_url, soup)
         write_csv(book, now)
