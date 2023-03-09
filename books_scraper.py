@@ -176,15 +176,19 @@ def get_book(url, soup):
 def write_csv(dictionary, now):
     """Write dictionary in csv file"""
     base_directory = 'scraped_data'
-    # replace space (regex \s) by '_'
-    name = re.sub(r'\s', '_', dictionary['title'].lower())
-    file_name = f'{name}_{now}.csv'
-    Path(base_directory).mkdir(parents=True, exist_ok=True)
-    file = Path(base_directory, file_name)
-    with open(file, 'w', newline='', encoding='utf-8') as csv_file:
+    category_name = dictionary['category'].lower()
+    file_name = f'{category_name}_{now}.csv'
+    # create directories
+    Path(base_directory, category_name).mkdir(parents=True, exist_ok=True)
+    # get the path to the file
+    file = Path(base_directory, category_name, file_name)
+    # verify if the file exists
+    file_exist = file.exists()
+    with open(file, 'a', newline='', encoding='utf-8') as csv_file:
         header = dictionary.keys()
         writer = csv.DictWriter(csv_file, fieldnames=header)
-        writer.writeheader()
+        if not file_exist:
+            writer.writeheader()
         writer.writerow(dictionary)
 
 
