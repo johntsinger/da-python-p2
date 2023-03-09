@@ -145,11 +145,34 @@ def get_book(url, soup):
     return book
 
 
+def write_csv(dictionary, now):
+    """Write dictionary in csv file"""
+    base_directory = 'scraped_data'
+    # replace space (regex \s) by '_'
+    name = re.sub(r'\s', '_', dictionary['title'].lower())
+    file_name = f'{name}_{now}.csv'
+    Path(base_directory).mkdir(parents=True, exist_ok=True)
+    file = Path(base_directory, file_name)
+    with open(file, 'w', newline='', encoding='utf-8') as csv_file:
+        header = dictionary.keys()
+        writer = csv.DictWriter(csv_file, fieldnames=header)
+        writer.writeheader()
+        writer.writerow(dictionary)
+
+
+def get_datetime():
+    """Get datetime using ISO format for file timestamp"""
+    now = datetime.now()
+    return now.strftime("%Y%m%dT%H%M%S")
+
+
 def main():
     """Main function"""
     start_url = 'http://books.toscrape.com/catalogue/a-light-in-the-attic_1000/index.html'
     soup = get_soup(start_url)
     book = get_book(start_url, soup)
+    now = get_datetime()
+    write_csv(book, now)
 
 
 if __name__ == '__main__':
