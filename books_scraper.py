@@ -36,3 +36,121 @@ def extract_with_css(query, soup, multi_values=False):
         soup.select_one(query)
         .get_text(strip=True) if soup.select_one(query) else ""
     )
+
+
+def parse_rating(query, soup):
+    """Change the rating number in word form to it's integer form"""
+    text_to_int = {
+        'one': 1,
+        'two': 2,
+        'three': 3,
+        'four': 4,
+        'five': 5,
+    }
+    # get the class name of <p class=star-rating Five>,
+    # get only the second class and lower it
+    rating = soup.select_one(query)['class'][1].lower()
+
+    return text_to_int[rating] if rating in text_to_int.keys() else 'not-rated'
+
+
+def parse_image_url(url, query, soup):
+    """Create absolute url with the relative url"""
+    # get the base url http://books.toscrape.com
+    base_url = urljoin(url, '/')
+    # get src attribute of <img>
+    relative_url = soup.select_one(query)['src']
+
+    return urljoin(base_url, relative_url)
+
+
+def parse_product_information(soup):
+    """Parse the table <tr> that contains product informations"""
+    def transform(match):
+        """re.sub repl function"""
+        if match.group(1):
+            return match.group(1)+'uding'
+        elif match.group(2):
+            return ''
+        else:
+            return '_'
+
+    # list of all <th> values
+    labels = extract_with_css('tr th', soup, True)
+    # list of all <td> values
+    values = extract_with_css('tr td',soup, True)
+    excluding_values = ['product type', 'tax', 'number of reviews']
+    product_information = {}
+    for i, label in enumerate(labels):
+        # exclude unwanted values
+        if label.lower() not in excluding_values:
+            if label.lower() == 'availability':
+                label = 'number_available'
+                # matches any digit character (0-9)
+                # get only the number of available books
+                values[i] = re.search(r'\d+', values[i]).group()
+            if label.lower() == 'upc':
+                label = 'universal_product_code'
+            # \B matches any position that is not a word boundary.
+            # \b matches a word boundary position between a word character
+            # and non-word character or position (start / end of string).
+            # \s matches any whitespace character (spaces, tabs, line breaks).
+            # add 'uding' after (cl) group to get excluding and including
+            # remove parenthesis and dot in the label if there are any
+            # replace spaces by '_'
+            # change the value of the string to an integer if it is a number
+            # can use lambda instead of function :
+            # lambda m: m.group(1)+'uding' if m.group(1) else ('' if m.group(2) else '_')
+            # but line is too long
+            label = re.sub(r'(\Bcl\b)|([().])|(\s)', transform, label.lower())
+            product_information[label] = int(
+                values[i]) if values[i].isdigit() else values[i]
+
+    return product_information
+
+
+def get_book(url, soup):
+    """Create dictionary to store scraped values"""
+    book = {}
+    book['product_page_url'] = url
+    # get <a> in the second last <li> in <ul> that has breadcrumb class
+    book['category'] = extract_with_css(
+        '.breadcrumb li:nth-last-child(2) a',
+        soup
+    )
+    # get <h1>
+    book['title'] = extract_with_css('h1', soup)
+    # get <img> src attribute in <div> that has product_gallery id
+    book['image_url'] = parse_image_url(
+        book['product_page_url'],
+        '#product_gallery img',
+        soup
+    )
+    # get <p class=star-rating Five> class attribute
+    # that is not in product_pod and parse it to get an integer
+    book['review_rating'] = parse_rating(
+        ':not(.product_pod) > .star-rating',
+        soup
+    )
+    # get first <p> just after <div> that has product_description class
+    book['product_description'] = extract_with_css(
+        '#product_description + p',
+        soup
+    )
+    # get product information
+    product_information = parse_product_information(soup)
+    for key, value in product_information.items():
+        book[key] = value
+
+    return book
+
+
+def main():
+    """Main function"""
+    start_url = 'http://books.toscrape.com/catalogue/a-light-in-the-attic_1000/index.html'
+    soup = get_soup(start_url)
+    book = get_book(start_url, soup)
+
+
+if __name__ == '__main__':
+    main()
