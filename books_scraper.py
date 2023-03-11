@@ -122,7 +122,7 @@ def parse_product_information(soup):
     # list of all <th> values
     labels = extract_with_css('tr th', soup, True)
     # list of all <td> values
-    values = extract_with_css('tr td',soup, True)
+    values = extract_with_css('tr td', soup, True)
     excluding_values = ['product type', 'tax', 'number of reviews']
     product_information = {}
     for i, label in enumerate(labels):
@@ -217,28 +217,33 @@ def get_datetime():
 def main():
     """Main function"""
     start_url = 'http://books.toscrape.com/'
-    with requests.Session() as session:
-        soup = get_soup(session, start_url)
-        category_urls = get_category_urls(start_url, soup)
-        # raise exception if no categories found in the page
-        if not category_urls:
-            print(
-                'No category was found on the page for '
-                'this url please select another one'
-            )
-            return None
-        nb_category = len(category_urls)
-        # use tqdm to show progess because it can be very long
-        for i, category_url in enumerate(category_urls):
-            soup = get_soup(session, category_url)
-            category_name = extract_with_css('.breadcrumb > .active', soup)
-            book_urls = get_book_urls(session, category_url, soup)
-            now = get_datetime()
-            description = f'{category_name} ({i+1}/{nb_category})'
-            for book_url in tqdm(book_urls, desc=description):
-                soup = get_soup(session, book_url)
-                book = get_book(book_url, soup)
-                write_csv(book, now)
+    # use tqdm to show progess because it can be very long
+    with tqdm(total=1000) as pbar:
+        # create Session to keep connection to the domain open
+        # which makes requests faster than creating a new connection each time
+        with requests.Session() as session:
+            soup = get_soup(session, start_url)
+            category_urls = get_category_urls(start_url, soup)
+            # do not continue if no categories found in the page
+            if not category_urls:
+                print(
+                    'No category was found on the page for '
+                    'this url please select another one'
+                )
+                return None
+            nb_category = len(category_urls)
+            for i, category_url in enumerate(category_urls):
+                soup = get_soup(session, category_url)
+                category_name = extract_with_css('.breadcrumb > .active', soup)
+                book_urls = get_book_urls(session, category_url, soup)
+                now = get_datetime()
+                description = f'{category_name} ({i+1}/{nb_category})'
+                pbar.set_description(description)
+                for book_url in book_urls:
+                    soup = get_soup(session, book_url)
+                    book = get_book(book_url, soup)
+                    write_csv(book, now)
+                    pbar.update(1)
 
 
 if __name__ == '__main__':
