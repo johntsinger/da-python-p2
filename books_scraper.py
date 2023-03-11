@@ -4,6 +4,8 @@ from pathlib import Path
 from urllib.parse import urljoin
 from urllib.request import urlretrieve
 from datetime import datetime
+from itertools import repeat
+from concurrent.futures import ThreadPoolExecutor
 import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
@@ -199,8 +201,10 @@ def make_directory(file_name, *pathsegments):
 
 def write_csv(dictionaries, now):
     """Write dictionaries in csv file"""
-    header = dictionaries[0].keys()
-    category_name = dictionaries[0]['category'].lower()
+    # get the first dictionary to extract headersand category_name
+    dictionary = dictionaries[0]
+    header = dictionary.keys()
+    category_name = dictionary['category'].lower()
     file_name = f'{category_name}_{now}.csv'
     # create directories and return the path to the file
     file = make_directory(file_name, category_name)
@@ -210,7 +214,7 @@ def write_csv(dictionaries, now):
         writer.writerows(dictionaries)
 
 
-def save_image(dictionaries):
+def save_image(dictionary):
     """Save image from url"""
     def transform(match):
         """re.sub repl function"""
@@ -219,15 +223,13 @@ def save_image(dictionaries):
         if match.group(2):
             return '_'
  
-    category_name = dictionaries[0]['category'].lower()
-    for dictionary in dictionaries:
-        title = re.sub(
-            r'([/\\:*?"><|-]+)|(\s+)', transform, dictionary['title'])
-        file_name = f"{title}.jpg"
-        # create directories and return path to the file
-        file = make_directory(file_name, category_name, 'images')
-        if not file.exists():
-            urlretrieve(dictionary['image_url'], file)
+    category_name = dictionary['category'].lower()
+    title = re.sub(r'([/\\:*?"><|-]+)|(\s+)', transform, dictionary['title'])
+    file_name = f"{title}.jpg"
+    # create directories and return path to the file
+    file = make_directory(file_name, category_name, 'images')
+    if not file.exists():
+        urlretrieve(dictionary['image_url'], file)
 
 
 def get_datetime():
@@ -239,7 +241,7 @@ def get_datetime():
 def main():
     """Main function"""
     start_url = 'http://books.toscrape.com/'
-    # use tqdm to show progess because it can be very long
+    # use tqdm to show progess
     with tqdm(total=1000) as pbar:
         # create Session to keep connection to the domain open
         # which makes requests faster than creating a new connection each time
@@ -254,23 +256,30 @@ def main():
                 )
                 return None
 
-            nb_category = len(category_urls)
-            for i, category_url in enumerate(category_urls):
-                soup = get_soup(session, category_url)
-                category_name = extract_with_css('.breadcrumb > .active', soup)
-                book_urls = get_book_urls(session, category_url, soup)
-                now = get_datetime()
-                description = f'{category_name} ({i+1}/{nb_category})'
-                pbar.set_description(description)
-                books = []
+            with ThreadPoolExecutor(max_workers=100) as executor:
+                # executor.map works like map builtin function
+                # map(function, iterable, *iterables)
+                # return an iterator (in this case a generator) that applies 
+                # function to every item of iterable, yielding the results.
+                soups = executor.map(get_soup, repeat(session), category_urls)
+                book_urls_by_category = executor.map(
+                    get_book_urls, repeat(session), category_urls, soups)
 
-                for book_url in book_urls:
-                    soup = get_soup(session, book_url)
-                    book = get_book(book_url, soup)
-                    books.append(book)
-                    pbar.update(1)
-                write_csv(books, now)
-                save_image(books)
+                # need to loop over each category to create specific 
+                # folder for each category
+                for book_urls in book_urls_by_category:
+                    soups = executor.map(get_soup, repeat(session), book_urls)
+                    # list of all books for each category
+                    # transform the generator to a list to makes it reusable
+                    # because the generator enpties after use
+                    books = list(executor.map(
+                        get_book, book_urls, soups))
+                    now = get_datetime()
+                    # write in csv
+                    write_csv(books, now)
+                    # write images
+                    executor.map(save_image, books)
+                    pbar.update(len(list(book_urls)))
 
 
 if __name__ == '__main__':
