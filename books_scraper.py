@@ -12,7 +12,16 @@ from tqdm import tqdm
 
 
 def get_soup(session, url):
-    """Get BeautifulSoup object"""
+    """Get BeautifulSoup object
+        
+    Args:
+        session (Session Object): a session from requests.Session()
+        url (str): an url
+
+    Returns:
+        BeautifulSoup (BeatifulSoup Object): the parsed document as a whole
+
+    """
     try:
         response = session.get(url)
     except requests.ConnectionError as err:
@@ -30,7 +39,19 @@ def get_soup(session, url):
 
 
 def extract_with_css(query, soup, multi_values=False):
-    """Extract value with css"""
+    """Extract value with css
+
+    Args:
+        query (str): a css selector
+        soup (BeautifulSoup Object): the parsed document as a whole
+        multi_values (bool): to switch between select_one and select method
+            default: False (select_one)
+
+    Returns:
+        (str) if multi_values is False: the first matching element
+        (list) if mutli_values is True: all the matching elements
+
+    """
     if multi_values:
         return [
             value.get_text(strip=True) if soup.select(query) else "" 
@@ -43,7 +64,16 @@ def extract_with_css(query, soup, multi_values=False):
 
 
 def get_category_urls(url, soup):
-    """Get urls of each cateagory"""
+    """Get urls of each cateagory
+    
+    Args:
+        url (str): an url
+        soup (BeautifulSoup Object): the parsed document as a whole
+
+    Returns:
+        category_urls (list): urls of each category on this page
+
+    """
     # get href for each <a> in <div> that has side_categories class
     # dont get the books category that is the category of all books  
     category_relative_urls = [
@@ -58,8 +88,19 @@ def get_category_urls(url, soup):
 
 
 def get_book_urls(session, url, soup):
-    """Get urls of each book in a category"""
-    # get href for each <a> in <h3> for each <article> that has product_pod class
+    """Get urls of each book in a category
+
+    Args:
+        session (Session Object): a session from requests.Session()
+        url (str): an url
+        soup (BeautifulSoup Object): the parsed document as a whole
+
+    Returns:
+        book_urls (list): urls of each book on this page
+
+    """
+    # get href for each <a> in <h3> for each <article> 
+    # that has product_pod class
     book_relative_urls = [
         a['href'] for a in soup.select('.product_pod > h3 > a')
     ]
@@ -86,7 +127,17 @@ def get_book_urls(session, url, soup):
 
 
 def parse_rating(query, soup):
-    """Change the rating number in word form to it's integer form"""
+    """Change the rating number in word form to it's integer form
+
+    Args:
+        query (str): a css selector
+        soup (BeautifulSoup Object): the parsed document as a whole
+
+    Returns:
+        [1-5] (int): the rating of the book
+        or 'not-rated' (str)
+
+    """
     text_to_int = {
         'one': 1,
         'two': 2,
@@ -102,7 +153,17 @@ def parse_rating(query, soup):
 
 
 def parse_image_url(url, query, soup):
-    """Create absolute url with the relative url"""
+    """Create absolute url with the relative url
+
+    Args:
+        query (str): a css selector
+        soup (BeautifulSoup Object): the parsed document as a whole
+        url (str): an url
+
+    Returns:
+        url (str): an url to the image of this book
+
+    """
     # get the base url http://books.toscrape.com
     base_url = urljoin(url, '/')
     # get src attribute of <img>
@@ -112,7 +173,15 @@ def parse_image_url(url, query, soup):
 
 
 def parse_product_information(soup):
-    """Parse the table <tr> that contains product informations"""
+    """Parse the table <tr> that contains product informations
+
+    Args:
+        soup (BeautifulSoup Object): the parsed document as a whole
+
+    Returns:
+        product_information (dict): product infomations for this book
+
+    """
     def transform(match):
         """re.sub repl function"""
         if match.group(1):
@@ -147,8 +216,9 @@ def parse_product_information(soup):
             # replace spaces by '_'
             # change the value of the string to an integer if it is a number
             # can use lambda instead of function :
-            # lambda m: m.group(1)+'uding' if m.group(1) else ('' if m.group(2) else '_')
-            # but line is too long
+            # lambda m: m.group(1)+'uding' if m.group(1) else (
+            #   '' if m.group(2) else '_')
+            # but line is too long and less readable
             label = re.sub(r'(\Bcl\b)|([().])|(\s)', transform, label.lower())
             product_information[label] = int(
                 values[i]) if values[i].isdigit() else values[i]
@@ -157,7 +227,16 @@ def parse_product_information(soup):
 
 
 def get_book(url, soup):
-    """Create dictionary to store scraped values"""
+    """Create dictionary to store scraped values
+
+    Args:
+        url (str): an url
+        soup (BeautifulSoup Object): the parsed document as a whole
+
+    Returns:
+        book (dict): a book with all informations
+
+    """
     book = {}
     book['product_page_url'] = url
     # get <a> in the second last <li> in <ul> that has breadcrumb class
@@ -193,14 +272,30 @@ def get_book(url, soup):
 
 
 def make_directory(file_name, *pathsegments):
-    """Create directories and return path to the file"""
+    """Create directories and return path to the file
+
+    Args:
+        file_name (str): the name of the file with its extension
+        *pathsegments (str): name(s) of subdirectory(ies) 
+            of scraped_data direcory 
+
+    Return:
+        Path (Path Object): the path to the file
+
+    """
     base_directory = 'scraped_data'
     Path(base_directory, *pathsegments).mkdir(parents=True, exist_ok=True)
     return Path(base_directory, *pathsegments, file_name)
 
 
 def write_csv(dictionaries, now):
-    """Write dictionaries in csv file"""
+    """Write dictionaries in csv file
+
+    Args:
+        dictionaries (list): list of books
+        now (datetime.datetime Object): the current local date and time
+
+    """
     # get the first dictionary to extract headersand category_name
     dictionary = dictionaries[0]
     header = dictionary.keys()
@@ -215,7 +310,12 @@ def write_csv(dictionaries, now):
 
 
 def save_image(dictionary):
-    """Save image from url"""
+    """Save image from url
+
+    Args:
+        dictionary (dict): a book dictionary
+
+    """
     def transform(match):
         """re.sub repl function"""
         if match.group(1):
@@ -233,7 +333,12 @@ def save_image(dictionary):
 
 
 def get_datetime():
-    """Get datetime using ISO format for file timestamp"""
+    """Get datetime using ISO format for file timestamp
+
+    Returns:
+        (str): time formated in YYYYMMDDTHHMMSS
+
+    """
     now = datetime.now()
     return now.strftime("%Y%m%dT%H%M%S")
 
@@ -261,6 +366,10 @@ def main():
                 # map(function, iterable, *iterables)
                 # return an iterator (in this case a generator) that applies 
                 # function to every item of iterable, yielding the results.
+                # with multiple iterables, the iterator stops when the shortest
+                # iterable is exhausted.
+                # use itertools repeat function to create iterator that
+                # return object over and over again, indefinitely
                 soups = executor.map(get_soup, repeat(session), category_urls)
                 book_urls_by_category = executor.map(
                     get_book_urls, repeat(session), category_urls, soups)
@@ -275,7 +384,7 @@ def main():
                     books = list(executor.map(
                         get_book, book_urls, soups))
                     now = get_datetime()
-                    # write in csv
+                    # write csv file
                     write_csv(books, now)
                     # write images
                     executor.map(save_image, books)
