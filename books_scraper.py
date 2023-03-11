@@ -1,8 +1,9 @@
 import re
 import csv
 from pathlib import Path
-from datetime import datetime
 from urllib.parse import urljoin
+from urllib.request import urlretrieve
+from datetime import datetime
 import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
@@ -189,23 +190,44 @@ def get_book(url, soup):
     return book
 
 
-def write_csv(dictionary, now):
-    """Write dictionary in csv file"""
+def make_directory(file_name, *pathsegments):
+    """Create directories and return path to the file"""
     base_directory = 'scraped_data'
-    category_name = dictionary['category'].lower()
+    Path(base_directory, *pathsegments).mkdir(parents=True, exist_ok=True)
+    return Path(base_directory, *pathsegments, file_name)
+
+
+def write_csv(dictionaries, now):
+    """Write dictionaries in csv file"""
+    header = dictionaries[0].keys()
+    category_name = dictionaries[0]['category'].lower()
     file_name = f'{category_name}_{now}.csv'
-    # create directories
-    Path(base_directory, category_name).mkdir(parents=True, exist_ok=True)
-    # get the path to the file
-    file = Path(base_directory, category_name, file_name)
-    # verify if the file exists
-    file_exist = file.exists()
-    with open(file, 'a', newline='', encoding='utf-8') as csv_file:
-        header = dictionary.keys()
+    # create directories and return the path to the file
+    file = make_directory(file_name, category_name)
+    with open(file, 'w', newline='', encoding='utf-8') as csv_file:
         writer = csv.DictWriter(csv_file, fieldnames=header)
-        if not file_exist:
-            writer.writeheader()
-        writer.writerow(dictionary)
+        writer.writeheader()
+        writer.writerows(dictionaries)
+
+
+def save_image(dictionaries):
+    """Save image from url"""
+    def transform(match):
+        """re.sub repl function"""
+        if match.group(1):
+            return ' '
+        if match.group(2):
+            return '_'
+ 
+    category_name = dictionaries[0]['category'].lower()
+    for dictionary in dictionaries:
+        title = re.sub(
+            r'([/\\:*?"><|-]+)|(\s+)', transform, dictionary['title'])
+        file_name = f"{title}.jpg"
+        # create directories and return path to the file
+        file = make_directory(file_name, category_name, 'images')
+        if not file.exists():
+            urlretrieve(dictionary['image_url'], file)
 
 
 def get_datetime():
@@ -231,6 +253,7 @@ def main():
                     'this url please select another one'
                 )
                 return None
+
             nb_category = len(category_urls)
             for i, category_url in enumerate(category_urls):
                 soup = get_soup(session, category_url)
@@ -239,11 +262,15 @@ def main():
                 now = get_datetime()
                 description = f'{category_name} ({i+1}/{nb_category})'
                 pbar.set_description(description)
+                books = []
+
                 for book_url in book_urls:
                     soup = get_soup(session, book_url)
                     book = get_book(book_url, soup)
-                    write_csv(book, now)
+                    books.append(book)
                     pbar.update(1)
+                write_csv(books, now)
+                save_image(books)
 
 
 if __name__ == '__main__':
