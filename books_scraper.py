@@ -388,7 +388,7 @@ def main():
                     write_csv(books, now)
                     # write images
                     executor.map(save_image, books)
-                    pbar.update(len(list(book_urls)))
+                    pbar.update(len(books))
 
 
 if __name__ == '__main__':
