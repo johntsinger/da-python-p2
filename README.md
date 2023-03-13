@@ -70,7 +70,7 @@ Notez que `<environment name>`  est un nom que vous choississez, par convention 
     python books_scraper.py
 ![execution image](./execution.jpg)
 
-Attendre la fin de l'exécution ! Vous trouverez les données comme décrit dans la partie [Déscrpition](#déscription) dans le dossier `scraped_data/`.
+Attendre la fin de l'exécution ! Vous trouverez les données, comme décrit dans la partie [Déscrpition](#déscription), dans le dossier `scraped_data/`.
     
 ## Contact :
 Jonathan Singer - john.t.singer@gmail.com\
