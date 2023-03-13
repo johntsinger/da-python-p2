@@ -3,7 +3,7 @@
 ## Déscription
 
 Scraper en python du site [Books to Scrape](http://books.toscrape.com/). Extrait les données de tous les livres du site et les enregistre dans des fichiers
-csv distincts nommés au nom de la catégorie et horodatés au format ISO 8061 `<nom_de_la_catégorie_YYYYMMDDTHHMMSS>.csv` trier par catégories dans des dossiers
+csv distincts nommés au nom de la catégorie et horodatés au format ISO 8601 `<nom_de_la_catégorie_YYYYMMDDTHHMMSS>.csv` trier par catégories dans des dossiers
 nommés `<nom_de_la_catégorie>/`, dans un dossier à la racine du projet nommé `scraped_data/` 
 
 Enregistre aussi les images des livres de chaque catégorie dans des fichiers jpg nommés `<titre_du_livre>.jpg` dans un dossier nommé `images/`
