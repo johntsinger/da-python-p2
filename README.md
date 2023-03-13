@@ -40,7 +40,7 @@ ou
 
 **Nécessite python3.8 ou supérieur**
 
-Si vous n'avez pas python3 ou vous avez une version antérieur a python 3.8 rendez vous sur le site : https://www.python.org/downloads/ et téléchargez le !
+Si vous n'avez pas python3 ou vous avez une version antérieur à python 3.8 rendez vous sur le site : https://www.python.org/downloads/ et téléchargez le !
 
 ### Environement virtuel :
 
