@@ -299,7 +299,7 @@ def write_csv(dictionaries, now):
     # get the first dictionary to extract headersand category_name
     dictionary = dictionaries[0]
     header = dictionary.keys()
-    category_name = dictionary['category'].lower()
+    category_name = re.sub(r'\s', '_', dictionary['category'].lower())
     file_name = f'{category_name}_{now}.csv'
     # create directories and return the path to the file
     file = make_directory(file_name, category_name)
@@ -323,7 +323,7 @@ def save_image(dictionary):
         if match.group(2):
             return '_'
  
-    category_name = dictionary['category'].lower()
+    category_name = re.sub(r'\s', '_', dictionary['category'].lower())
     title = re.sub(r'([/\\:*?"><|-]+)|(\s+)', transform, dictionary['title'])
     file_name = f"{title}.jpg"
     # create directories and return path to the file
@@ -333,7 +333,7 @@ def save_image(dictionary):
 
 
 def get_datetime():
-    """Get datetime using ISO format for file timestamp
+    """Get datetime using ISO 8601 format for file timestamp
 
     Returns:
         (str): time formated in YYYYMMDDTHHMMSS
