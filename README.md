@@ -1,57 +1,54 @@
 # Dévelopeur d'application Python - P2 - Utilisez les bases de Python pour l'analyse de marché
 
-## Déscription
+## Description
 
-Scraper en python du site [Books to Scrape](http://books.toscrape.com/). Extrait les données de tous les livres du site et les enregistre dans des fichiers
-csv distincts nommés au nom de la catégorie et horodatés au format ISO 8601 `<nom_de_la_catégorie_YYYYMMDDTHHMMSS>.csv` trier par catégories dans des dossiers
-nommés `<nom_de_la_catégorie>/`, dans un dossier à la racine du projet nommé `scraped_data/` 
+A Python web scraper of the site [Books to Scrape](http://books.toscrape.com/). Extracts data from all books of the site and saves them in separate csv files named after the category to which they belong and time-stamped in ISO 8601 format `<category_name_YYYYMMDDTHHMMSS>.csv`, sorted by category in folders named `<category_name>/`, in a folder in the project root named `scraped_data/`
 
-Enregistre aussi les images des livres de chaque catégorie dans des fichiers jpg nommés `<titre_du_livre>.jpg` dans un dossier nommé `images/`
-se trouvant dans les dossiers `<nom_de_la_catégorie>/` du dossier `scraped_data/` :
-- `projet/`
+Also saves the images of the books of each category in jpg files named `<book_title>.jpg` in a folder named `images/` located in the `<category_name>/` folders of the `scraped_data/` folder :
+- `project/`
   - `scraped_data/`
-    - `<nom_de_la_catégorie>/`
+    - `<category_name>/`
       - `images/`
-        - `<titre_du_livre>.jpg`
-      - `<nom_de_la_catégorie_YYYYMMDDTHHMMSS>.csv`
+        - `<book_title>.jpg`
+      - `<category_name_YYYYMMDDTHHMMSS>.csv`
 
-## Guide d'installation
+## Installation guide
 
-### Cloner le projet avec Git  :
+### Clone respository with Git :
 
     git clone https://github.com/johntsinger/da-python-p2.git
     
-ou
+or
 
-### Télecharger l'archive du projet :
+### Download the respository :
 
-- Aller sur la page du projet
-- Cliquer sur Code
+- On the project page
+- Click on Code
 
-    ![bouton_vert_code](./how_to_download_1.jpg)
+    ![green_code_button](./how_to_download_1.jpg)
   
-- Cliquer sur download ZIP :
+- Click on download ZIP :
 
     ![download ZIP](./how_to_download_2.jpg)
      
-- Extraire le fichier.
+- Extract the file.
 
-### Installer python :
+### Install Python :
 
-**Nécessite python3.8 ou supérieur**
+**Requires Python 3.8 or higher**
 
-Si vous n'avez pas python3 ou vous avez une version antérieur à python 3.8 rendez vous sur le site : https://www.python.org/downloads/ et téléchargez le !
+If you don't have Python 3 or if you have an older release, please visit : https://www.python.org/downloads/ to download it !
 
-### Environement virtuel :
+### Virtual Environment :
 
-#### Créer un environnement virtuel à la racine du projet :
+#### Create a virtual environment in the project root :
 
-Ouvrez un terminal de commande et allez à l'emplacement du projet.\
-Notez que `<environment name>`  est un nom que vous choississez, par convention on utilise `env`.
+Open a command prompt and go to the project location.\
+Please note that `<environment name>` is a name you choose, for more convenience we use `env`.
 
     python -m venv <environment name>
 
-#### Activer l'environnement virtuel :
+#### Activate a virtual environment :
 
 ##### windows :
 
@@ -61,17 +58,17 @@ Notez que `<environment name>`  est un nom que vous choississez, par convention 
 
     source <environment name>/bin/activate
     
-#### Installer les dépendances :
+#### Install dependencies :
 
     pip install -r requirements.txt
     
-## Exécuter le scraper
+## Run the scraper
 
     python books_scraper.py
 ![execution image](./execution.jpg)
 
-Attendre la fin de l'exécution ! Vous trouverez les données, comme décrit dans la partie [Déscrpition](#déscription), dans le dossier `scraped_data/`.
+Please wait until the process is completed! You will find the data, as described in the [Descrpition](#description) section, in the `scraped_data/` folder.
     
 ## Contact :
 Jonathan Singer - john.t.singer@gmail.com\
-Lien du projet : https://github.com/johntsinger/da-python-p2
+Project link : https://github.com/johntsinger/da-python-p2
