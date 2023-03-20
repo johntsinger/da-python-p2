@@ -14,13 +14,13 @@ Also saves the images of the books of each category in jpg files named `<book_ti
 
 ## Installation guide
 
-### Clone respository with Git :
+### Clone repository with Git :
 
     git clone https://github.com/johntsinger/da-python-p2.git
     
 or
 
-### Download the respository :
+### Download the repository :
 
 - On the project page
 - Click on Code
