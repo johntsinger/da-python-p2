@@ -1,4 +1,4 @@
-# Dévelopeur d'application Python - P2 - Utilisez les bases de Python pour l'analyse de marché
+# Python Application Developer - P2 - Use Python basics for market analysis
 
 ## Description
 
