@@ -296,7 +296,7 @@ def write_csv(dictionaries, now):
         now (datetime.datetime Object): the current local date and time
 
     """
-    # get the first dictionary to extract headersand category_name
+    # get the first dictionary to extract headers and category_name
     dictionary = dictionaries[0]
     header = dictionary.keys()
     category_name = re.sub(r'\s', '_', dictionary['category'].lower())
@@ -346,6 +346,7 @@ def get_datetime():
 def main():
     """Main function"""
     start_url = 'http://books.toscrape.com/'
+    now = get_datetime()
     # use tqdm to show progess
     with tqdm(total=1000) as pbar:
         # create Session to keep connection to the domain open
@@ -383,7 +384,6 @@ def main():
                     # because the generator enpties after use
                     books = list(executor.map(
                         get_book, book_urls, soups))
-                    now = get_datetime()
                     # write csv file
                     write_csv(books, now)
                     # write images
