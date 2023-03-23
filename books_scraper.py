@@ -299,7 +299,7 @@ def write_csv(dictionaries, now):
     # get the first dictionary to extract headers and category_name
     dictionary = dictionaries[0]
     header = dictionary.keys()
-    category_name = re.sub(r'\s', '_', dictionary['category'].lower())
+    category_name = dictionary['category'].lower().replace(' ', '_')
     file_name = f'{category_name}_{now}.csv'
     # create directories and return the path to the file
     file = make_directory(file_name, category_name)
@@ -323,7 +323,7 @@ def save_image(dictionary):
         if match.group(2):
             return '_'
  
-    category_name = re.sub(r'\s', '_', dictionary['category'].lower())
+    category_name = dictionary['category'].lower().replace(' ', '_')
     title = re.sub(r'([/\\:*?"><|-]+)|(\s+)', transform, dictionary['title'])
     file_name = f"{title}.jpg"
     # create directories and return path to the file
