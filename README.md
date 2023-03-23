@@ -22,7 +22,7 @@ or
 
 ### Download the repository :
 
-- On the project page
+- On the [project page](https://github.com/johntsinger/da-python-p2)
 - Click on Code
 
     ![green_code_button](./how_to_download_1.jpg)
