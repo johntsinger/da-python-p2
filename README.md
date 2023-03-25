@@ -5,7 +5,7 @@
 A Python web scraper of the site [Books to Scrape](http://books.toscrape.com/). Extracts data from all books of the site and saves them in separate csv files named after the category to which they belong and time-stamped in ISO 8601 format `<category_name_YYYYMMDDTHHMMSS>.csv`, sorted by category in folders named `<category_name>/`, in a folder in the project root named `scraped_data/`
 
 Also saves the images of the books of each category in jpg files named `<book_title>.jpg` in a folder named `images/` located in the `<category_name>/` folders of the `scraped_data/` folder :
-- `project/`
+- `da-python-p2/`
   - `scraped_data/`
     - `<category_name>/`
       - `images/`
