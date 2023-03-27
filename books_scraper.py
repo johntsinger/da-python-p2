@@ -7,6 +7,7 @@ from datetime import datetime
 from itertools import repeat
 from concurrent.futures import ThreadPoolExecutor
 import requests
+from requests.adapters import HTTPAdapter, Retry
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
@@ -22,20 +23,14 @@ def get_soup(session, url):
         BeautifulSoup (BeatifulSoup Object): the parsed document as a whole
 
     """
-    try:
-        response = session.get(url)
-    except requests.ConnectionError as err:
-        # raise ConnectionError if wrong url
-        message = f'\nPlease check the url :\n - {url}'
-        raise requests.ConnectionError(err, message)
-    else:
-        if response.ok:
-            # change the encoding (ISO-8859-1) to utf-8 to avoid bad characters
-            response.encoding = 'utf-8'
+    response = session.get(url)
+    if response.ok:
+        # change the encoding (ISO-8859-1) to utf-8 to avoid bad characters
+        response.encoding = 'utf-8'
 
-            return BeautifulSoup(response.text, 'lxml')
-        # raise HTTPError if not response.ok
-        response.raise_for_status()
+        return BeautifulSoup(response.text, 'lxml')
+    # raise HTTPError if not response.ok
+    response.raise_for_status()
 
 
 def extract_with_css(query, soup, multi_values=False):
@@ -352,6 +347,19 @@ def main():
         # create Session to keep connection to the domain open
         # which makes requests faster than creating a new connection each time
         with requests.Session() as session:
+            # retry session.get() method 3 times if failed on connection issues
+            # or http status codes 502, 503 and 504
+            retries = Retry(
+                total=3,
+                backoff_factor=0.5,
+                status_forcelist=[502, 503, 504]
+            )
+            # enable a backoff strategy for all urls strating with http://
+            # if connexion fails retry after 0s, 1s and 2s
+            session.mount(
+                'http://',
+                HTTPAdapter(max_retries=retries)
+            )
             soup = get_soup(session, start_url)
             category_urls = get_category_urls(start_url, soup)
             # do not continue if no categories found in the page
