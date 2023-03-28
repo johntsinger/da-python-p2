@@ -6,6 +6,7 @@ from urllib.request import urlretrieve
 from datetime import datetime
 from itertools import repeat
 from concurrent.futures import ThreadPoolExecutor
+
 import requests
 from requests.adapters import HTTPAdapter, Retry
 from bs4 import BeautifulSoup
